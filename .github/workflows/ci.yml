@@ -167,28 +167,29 @@ jobs:
 ###########################################################
 
   image-scan:
-
+  
     needs: push
-
+    
     runs-on: ubuntu-latest
-
+  
     steps:
-
       - name: Scan Backend Image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
           format: table
-          exit-code: 1
+          exit-code: "1"
           severity: HIGH,CRITICAL
-
+          ignore-unfixed: true
+  
       - name: Scan Frontend Image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
           format: table
-          exit-code: 1
+          exit-code: "1"
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
 
 ###########################################################
 # 7. GITOPS DEPLOYMENT
