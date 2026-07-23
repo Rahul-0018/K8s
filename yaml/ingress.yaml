@@ -5,9 +5,12 @@ metadata:
   name: chatbot-ingress
   namespace: chatbot
 
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
 spec:
 
-  ingressClassName: haproxy
+  ingressClassName: nginx
 
   rules:
 
