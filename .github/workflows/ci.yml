@@ -5,13 +5,228 @@ on:
     branches:
       - main
 
+env:
+  BACKEND_IMAGE: rahulloganathan/chatbot-backend
+  FRONTEND_IMAGE: rahulloganathan/chatbot-frontend
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
 
-  build:
+###########################################################
+# 1. CODE QUALITY
+###########################################################
+
+  code-quality:
     runs-on: ubuntu-latest
 
     steps:
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - run: echo "Hello GitHub Actions"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Linters
+        run: |
+          pip install black flake8 ruff
+
+      - name: Black
+        run: black backend --check
+
+      - name: Flake8
+        run: flake8 backend
+
+      - name: Ruff
+        run: ruff check backend
+
+###########################################################
+# 2. DEPENDENCY SCAN
+###########################################################
+
+  dependency-scan:
+
+    needs: code-quality
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: |
+          pip install pip-audit
+
+      - name: Dependency Scan
+        run: |
+          pip-audit -r backend/requirements.txt
+
+###########################################################
+# 3. FILE SYSTEM SCAN
+###########################################################
+
+  filesystem-scan:
+
+    needs: dependency-scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+
+###########################################################
+# 4. BUILD IMAGES
+###########################################################
+
+  build:
+
+    needs: filesystem-scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
+
+      - name: Build Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
+
+###########################################################
+# 5. PUSH IMAGES
+###########################################################
+
+  push:
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Login DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.BACKEND_IMAGE }}:latest
+
+      - name: Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+###########################################################
+# 6. IMAGE SCAN
+###########################################################
+
+  image-scan:
+
+    needs: push
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Scan Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
+      - name: Scan Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: 1
+          severity: HIGH,CRITICAL
+
+###########################################################
+# 7. GITOPS DEPLOYMENT
+###########################################################
+
+  deploy-gitops:
+
+    needs: image-scan
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout GitOps Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.GITOPS_REPO }}
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update Backend Image Tag
+        run: |
+          sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
+          gitops/chatbot/backend-values.yaml
+
+      - name: Update Frontend Image Tag
+        run: |
+          sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
+          gitops/chatbot/frontend-values.yaml
+
+      - name: Commit Changes
+        run: |
+          cd gitops
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+
+          git add .
+
+          git commit -m "Deploy ${IMAGE_TAG}" || exit 0
+
+          git push
