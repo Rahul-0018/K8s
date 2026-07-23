@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: chatbot
+
+  namespace: argocd
+
+spec:
+
+  project: default
+
+  source:
+
+    repoURL: https://github.com/Rahul-0018/K8s.git
+
+    targetRevision: main
+
+    path: .
+
+  destination:
+
+    server: https://kubernetes.default.svc
+
+    namespace: chatbot
+
+  syncPolicy:
+
+    automated:
+
+      prune: true
+
+      selfHeal: true
+
+    syncOptions:
+
+    - CreateNamespace=true
