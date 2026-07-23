@@ -22,7 +22,7 @@ spec:
 
       - name: frontend
 
-        image: rahulloganathan/chatbot-frontend:d018ee9fe97affbbbd1c7858d86be81e08b4982d
+        image: rahulloganathan/chatbot-frontend:78c887a3d4bf2b86a9e713a77fa74f500187718b
 
         imagePullPolicy: Always
 
