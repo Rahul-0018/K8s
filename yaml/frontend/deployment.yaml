@@ -22,7 +22,7 @@ spec:
 
       - name: frontend
 
-        image: rahulloganathan/frontend:v1
+        image: rahulloganathan/frontend:v2
 
         imagePullPolicy: Always
 
