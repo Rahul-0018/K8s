@@ -16,7 +16,7 @@ spec:
 
     targetRevision: main
 
-    path: .
+    path: yaml
 
   destination:
 
