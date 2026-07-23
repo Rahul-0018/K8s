@@ -32,7 +32,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: groq-secret
-              key: api-key
+              key: GROQ_API_KEY
 
         resources:
           requests:
