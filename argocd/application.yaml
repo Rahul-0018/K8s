@@ -17,6 +17,9 @@ spec:
     targetRevision: main
 
     path: yaml
+    
+    directory:
+        recurse: true
 
     directory:
       recurse: true
