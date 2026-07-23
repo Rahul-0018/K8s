@@ -196,38 +196,30 @@ jobs:
 ###########################################################
 
   deploy-gitops:
-
     needs: image-scan
-
     runs-on: ubuntu-latest
-
+  
     steps:
-
-      - name: Checkout GitOps Repo
+      - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          repository: ${{ secrets.GITOPS_REPO }}
-          token: ${{ secrets.GITOPS_TOKEN }}
-          path: gitops
-
-      - name: Update Backend Image Tag
+  
+      - name: Update Backend Image
         run: |
-          sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
+          sed -i "s|image: .*|image: ${BACKEND_IMAGE}:${IMAGE_TAG}|" \
           yaml/backend/deployment.yaml
-
-      - name: Update Frontend Image Tag
+  
+      - name: Update Frontend Image
         run: |
-          sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
+          sed -i "s|image: .*|image: ${FRONTEND_IMAGE}:${IMAGE_TAG}|" \
           yaml/frontend/deployment.yaml
-
-      - name: Commit Changes
+  
+      - name: Commit and Push
         run: |
-          cd gitops
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
 
-          git add .
-
+          git add yaml/backend/deployment.yaml yaml/frontend/deployment.yaml
+  
           git commit -m "Deploy ${IMAGE_TAG}" || exit 0
-
+  
           git push
