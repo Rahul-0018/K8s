@@ -213,12 +213,12 @@ jobs:
       - name: Update Backend Image Tag
         run: |
           sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
-          gitops/chatbot/backend-values.yaml
+          yaml/backend/deployment.yaml
 
       - name: Update Frontend Image Tag
         run: |
           sed -i "s/tag:.*/tag: ${IMAGE_TAG}/" \
-          gitops/chatbot/frontend-values.yaml
+          yaml/frontend/deployment.yaml
 
       - name: Commit Changes
         run: |
