@@ -27,13 +27,12 @@ spec:
         ports:
         - containerPort: 8000
 
-        # env:
-
-        # - name: GROQ_API_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: groq-secret
-        #       key: api-key
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: groq-secret
+              key: api-key
 
         resources:
           requests:
