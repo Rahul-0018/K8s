@@ -3,16 +3,12 @@ import requests
 import streamlit as st
 
 BACKEND_URL = (
-f"http://{os.environ['CHATBOT_BACKEND_SERVICE_HOST']}:"
+    f"http://{os.environ['CHATBOT_BACKEND_SERVICE_HOST']}:"
     f"{os.environ['CHATBOT_BACKEND_SERVICE_PORT']}/chat"
 )
 
 
-st.set_page_config(
-    page_title="Kubernetes AI Assistant",
-    page_icon="☸️",
-    layout="wide"
-)
+st.set_page_config(page_title="Kubernetes AI Assistant", page_icon="☸️", layout="wide")
 
 st.title("AI Assistant")
 
@@ -27,12 +23,7 @@ prompt = st.chat_input("Ask a Kubernetes question...")
 
 if prompt:
 
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": prompt
-        }
-    )
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -44,11 +35,7 @@ if prompt:
             try:
 
                 response = requests.post(
-                    BACKEND_URL,
-                    json={
-                        "query": prompt
-                    },
-                    timeout=60
+                    BACKEND_URL, json={"query": prompt}, timeout=60
                 )
 
                 response.raise_for_status()
@@ -61,9 +48,4 @@ if prompt:
 
             st.markdown(answer)
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": answer
-        }
-    )
+    st.session_state.messages.append({"role": "assistant", "content": answer})
