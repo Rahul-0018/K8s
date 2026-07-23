@@ -18,6 +18,9 @@ spec:
 
     path: yaml
 
+    directory:
+      recurse: true
+
   destination:
 
     server: https://kubernetes.default.svc
