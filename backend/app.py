@@ -17,20 +17,18 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-app = FastAPI(
-    title="Kubernetes Chatbot API",
-    version="1.0"
-)
+app = FastAPI(title="Kubernetes Chatbot API", version="1.0")
 
 Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # Change to frontend URL in production
+    allow_origins=["*"],  # Change to frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class ChatRequest(BaseModel):
     query: str
@@ -38,6 +36,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+
 
 SYSTEM_PROMPT = """
 You are an expert Kubernetes DevOps assistant.
@@ -52,12 +51,10 @@ politely refuse.
 Keep answers concise and technically accurate.
 """
 
+
 @app.get("/")
 def home():
-    return {
-        "status": "running",
-        "service": "Kubernetes Chatbot"
-    }
+    return {"status": "running", "service": "Kubernetes Chatbot"}
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -66,22 +63,13 @@ def chat(request: ChatRequest):
     try:
 
         completion = client.chat.completions.create(
-
             model="llama-3.3-70b-versatile",
-
             messages=[
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": request.query
-                }
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": request.query},
             ],
-
             temperature=0.3,
-            max_completion_tokens=1024
+            max_completion_tokens=1024,
         )
 
         answer = completion.choices[0].message.content
