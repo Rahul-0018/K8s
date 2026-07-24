@@ -4,7 +4,7 @@ import traceback
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from groq import Groq, APIError
+from groq import APIError, Groq
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 
