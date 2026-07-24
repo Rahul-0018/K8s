@@ -20,7 +20,7 @@ spec:
 
       - name: backend
 
-        image: rahulloganathan/chatbot-backend:78c887a3d4bf2b86a9e713a77fa74f500187718b
+        image: rahulloganathan/chatbot-backend:331bf9371810d418840380633b6f3e1a421404a1
 
         imagePullPolicy: Always
 
